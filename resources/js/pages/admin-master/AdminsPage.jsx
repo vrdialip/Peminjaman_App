@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Users, Edit, Key, UserX, UserCheck } from 'lucide-react';
+import { Plus, Search, Users, Edit, Key, UserX, UserCheck, Trash2 } from 'lucide-react';
 import { AdminMasterLayout } from '@/layouts/AdminMasterLayout';
 import { adminMasterApi } from '@/lib/api';
 import { Card, Button, Input, Select, Spinner, StatusBadge, EmptyState } from '@/components/ui';
@@ -15,6 +15,7 @@ export function AdminsPage() {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [selectedAdmin, setSelectedAdmin] = useState(null);
     const [newPassword, setNewPassword] = useState('');
+    const [isEdit, setIsEdit] = useState(false);
 
     const [form, setForm] = useState({
         name: '',
@@ -53,14 +54,34 @@ export function AdminsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await adminMasterApi.createAdmin(form);
-            toast.success('Admin berhasil dibuat');
+            if (isEdit) {
+                await adminMasterApi.updateAdmin(selectedAdmin.id, form);
+                toast.success('Admin berhasil diperbarui');
+            } else {
+                await adminMasterApi.createAdmin(form);
+                toast.success('Admin berhasil dibuat');
+            }
             setShowModal(false);
             setForm({ name: '', email: '', password: '', organization_id: '', phone: '' });
+            setIsEdit(false);
+            setSelectedAdmin(null);
             fetchData();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Gagal membuat admin');
+            toast.error(error.response?.data?.message || (isEdit ? 'Gagal memperbarui admin' : 'Gagal membuat admin'));
         }
+    };
+
+    const handleEdit = (admin) => {
+        setSelectedAdmin(admin);
+        setForm({
+            name: admin.name,
+            email: admin.email,
+            password: '', // Leave empty for update
+            organization_id: admin.organization_id,
+            phone: admin.phone || '',
+        });
+        setIsEdit(true);
+        setShowModal(true);
     };
 
     const handleResetPassword = async () => {
@@ -86,6 +107,19 @@ export function AdminsPage() {
             fetchData();
         } catch (error) {
             toast.error('Gagal mengubah status');
+        }
+    };
+
+    const handleDelete = async (admin) => {
+        if (!window.confirm(`Apakah Anda yakin ingin menghapus admin ${admin.name}?`)) {
+            return;
+        }
+        try {
+            await adminMasterApi.deleteAdmin(admin.id);
+            toast.success('Admin berhasil dihapus');
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Gagal menghapus admin');
         }
     };
 
@@ -161,6 +195,15 @@ export function AdminsPage() {
                                     <Button
                                         variant="secondary"
                                         size="sm"
+                                        onClick={() => handleEdit(admin)}
+                                        title="Edit"
+                                        className="!bg-blue-500/20 !text-blue-400 hover:!bg-blue-500/30"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
                                         onClick={() => {
                                             setSelectedAdmin(admin);
                                             setShowPasswordModal(true);
@@ -181,6 +224,15 @@ export function AdminsPage() {
                                             <UserCheck className="w-4 h-4" />
                                         )}
                                     </Button>
+                                    <Button
+                                        variant="danger"
+                                        size="sm"
+                                        onClick={() => handleDelete(admin)}
+                                        title="Hapus"
+                                        className="!bg-red-500/20 !text-red-400 hover:!bg-red-500/30"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
                                 </div>
                             </Card>
                         ))}
@@ -188,11 +240,16 @@ export function AdminsPage() {
                 )}
             </div>
 
-            {/* Create Modal */}
+            {/* Create/Edit Modal */}
             <Modal
                 isOpen={showModal}
-                onClose={() => setShowModal(false)}
-                title="Tambah Admin Organisasi"
+                onClose={() => {
+                    setShowModal(false);
+                    setIsEdit(false);
+                    setSelectedAdmin(null);
+                    setForm({ name: '', email: '', password: '', organization_id: '', phone: '' });
+                }}
+                title={isEdit ? "Edit Admin Organisasi" : "Tambah Admin Organisasi"}
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input
@@ -209,11 +266,11 @@ export function AdminsPage() {
                         required
                     />
                     <Input
-                        label="Password"
+                        label={isEdit ? "Password (Kosongkan jika tidak diubah)" : "Password"}
                         type="password"
                         value={form.password}
                         onChange={(e) => setForm({ ...form, password: e.target.value })}
-                        required
+                        required={!isEdit}
                     />
                     <Select
                         label="Organisasi"
@@ -236,12 +293,17 @@ export function AdminsPage() {
                             type="button"
                             variant="secondary"
                             className="flex-1"
-                            onClick={() => setShowModal(false)}
+                            onClick={() => {
+                                setShowModal(false);
+                                setIsEdit(false);
+                                setSelectedAdmin(null);
+                                setForm({ name: '', email: '', password: '', organization_id: '', phone: '' });
+                            }}
                         >
                             Batal
                         </Button>
                         <Button type="submit" variant="primary" className="flex-1">
-                            Tambah Admin
+                            {isEdit ? "Simpan Perubahan" : "Tambah Admin"}
                         </Button>
                     </div>
                 </form>

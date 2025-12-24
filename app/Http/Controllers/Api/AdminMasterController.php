@@ -236,7 +236,7 @@ class AdminMasterController extends Controller
         $admin = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
             'role' => User::ROLE_ADMIN_ORG,
             'organization_id' => $request->organization_id,
             'phone' => $request->phone,
@@ -260,6 +260,55 @@ class AdminMasterController extends Controller
     }
 
     /**
+     * Update admin org
+     */
+    public function updateAdmin(Request $request, User $admin)
+    {
+        if ($admin->role !== User::ROLE_ADMIN_ORG) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User bukan admin organisasi',
+            ], 400);
+        }
+
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $admin->id,
+            'password' => 'nullable|string|min:8',
+            'organization_id' => 'sometimes|exists:organizations,id',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $oldValues = $admin->toArray();
+        $admin->fill($request->except(['password', 'role', 'status']));
+
+        if ($request->filled('password')) {
+            $admin->password = Hash::make($request->password);
+        }
+
+        if ($request->filled('organization_id')) {
+            $admin->organization_id = $request->organization_id;
+        }
+
+        $admin->save();
+
+        AuditLog::log(
+            'update',
+            "Memperbarui admin organisasi: {$admin->name}",
+            'User',
+            $admin->id,
+            $oldValues,
+            $admin->fresh()->toArray()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin organisasi berhasil diperbarui',
+            'data' => $admin->load('organization'),
+        ]);
+    }
+
+    /**
      * Reset admin password
      */
     public function resetAdminPassword(Request $request, User $admin)
@@ -275,7 +324,7 @@ class AdminMasterController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        $admin->password = $request->password;
+        $admin->password = Hash::make($request->password);
         $admin->save();
 
         AuditLog::log(
@@ -322,6 +371,36 @@ class AdminMasterController extends Controller
             'success' => true,
             'message' => 'Status admin berhasil diubah',
             'data' => $admin->fresh(),
+        ]);
+    }
+
+    /**
+     * Delete (soft) admin
+     */
+    public function deleteAdmin(User $admin)
+    {
+        if ($admin->role !== User::ROLE_ADMIN_ORG) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User bukan admin organisasi',
+            ], 400);
+        }
+
+        $oldValues = $admin->toArray();
+        $admin->delete();
+
+        AuditLog::log(
+            'delete',
+            "Menghapus admin organisasi: {$admin->name}",
+            'User',
+            $admin->id,
+            $oldValues,
+            null
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin organisasi berhasil dihapus',
         ]);
     }
 

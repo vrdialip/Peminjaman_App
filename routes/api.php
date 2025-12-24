@@ -60,8 +60,10 @@ Route::prefix('admin-master')->middleware(['auth:sanctum', 'admin.master'])->gro
     // Admin Org Management
     Route::get('/admins', [AdminMasterController::class, 'listAdmins']);
     Route::post('/admins', [AdminMasterController::class, 'createAdmin']);
+    Route::put('/admins/{admin}', [AdminMasterController::class, 'updateAdmin']);
     Route::put('/admins/{admin}/reset-password', [AdminMasterController::class, 'resetAdminPassword']);
     Route::put('/admins/{admin}/toggle-status', [AdminMasterController::class, 'toggleAdminStatus']);
+    Route::delete('/admins/{admin}', [AdminMasterController::class, 'deleteAdmin']);
     
     // Monitoring (Read Only)
     Route::get('/items', [AdminMasterController::class, 'allItems']);

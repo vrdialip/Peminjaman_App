@@ -140,7 +140,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->password = $request->password;
+        $user->password = Hash::make($request->password);
         $user->save();
 
         AuditLog::log(

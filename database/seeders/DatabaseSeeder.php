@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $adminMaster = User::create([
             'name' => 'Admin Master',
             'email' => 'admin@peminjaman.com',
-            'password' => 'password123',
+            'password' => Hash::make('password123'),
             'role' => User::ROLE_ADMIN_MASTER,
             'status' => 'active',
         ]);
@@ -53,7 +53,7 @@ class DatabaseSeeder extends Seeder
         $adminOrg1 = User::create([
             'name' => 'Admin OSIS',
             'email' => 'admin.osis@peminjaman.com',
-            'password' => 'password123',
+            'password' => Hash::make('password123'),
             'role' => User::ROLE_ADMIN_ORG,
             'organization_id' => $org1->id,
             'status' => 'active',
@@ -62,7 +62,7 @@ class DatabaseSeeder extends Seeder
         $adminOrg2 = User::create([
             'name' => 'Admin Pramuka',
             'email' => 'admin.pramuka@peminjaman.com',
-            'password' => 'password123',
+            'password' => Hash::make('password123'),
             'role' => User::ROLE_ADMIN_ORG,
             'organization_id' => $org2->id,
             'status' => 'active',

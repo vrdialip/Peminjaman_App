@@ -73,8 +73,10 @@ export const adminMasterApi = {
     // Admins
     getAdmins: (params = {}) => api.get('/admin-master/admins', { params }),
     createAdmin: (data) => api.post('/admin-master/admins', data),
+    updateAdmin: (id, data) => api.put(`/admin-master/admins/${id}`, data),
     resetAdminPassword: (id, password) => api.put(`/admin-master/admins/${id}/reset-password`, { password }),
     toggleAdminStatus: (id) => api.put(`/admin-master/admins/${id}/toggle-status`),
+    deleteAdmin: (id) => api.delete(`/admin-master/admins/${id}`),
 
     // Monitoring
     getAllItems: (params = {}) => api.get('/admin-master/items', { params }),

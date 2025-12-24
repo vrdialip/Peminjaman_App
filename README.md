@@ -1,217 +1,141 @@
-# Sistem Peminjaman Barang Organisasi
+# 📦 Sistem Peminjaman Barang
 
-Sistem peminjaman barang organisasi yang modern dan responsive menggunakan Laravel, React, dan Tailwind CSS.
+Aplikasi manajemen peminjaman barang berbasis web yang dibangun menggunakan **Laravel 12** (Backend) dan **React + Tailwind CSS** (Frontend).
 
-## 🚀 Fitur
+## 🛠️ Persyaratan Sistem (Requirements)
 
-### Roles & Akses
+Sebelum memulai, pastikan komputer Anda sudah terinstall:
 
-#### Admin Master
-- ✅ Kelola organisasi (CRUD)
-- ✅ Kelola akun admin organisasi
-- ✅ Reset password admin
-- ✅ Suspend/aktivasi akun admin
-- ✅ Monitoring semua data (read-only)
-- ✅ Audit log global
+*   **PHP**: Versi 8.2 atau lebih baru.
+*   **Composer**: Untuk manajemen dependensi PHP.
+*   **Node.js & NPM**: Untuk manajemen dependensi Frontend.
+*   **MySQL**: Database server (Bisa menggunakan XAMPP, Laragon, atau Docker).
+*   **Git**: (Opsional) Untuk clone repository.
 
-#### Admin Organisasi
-- ✅ Kelola barang organisasi
-- ✅ Tentukan barang boleh/tidak dipinjam
-- ✅ Verifikasi peminjaman
-- ✅ Verifikasi pengembalian
-- ✅ Laporan inventaris & peminjaman
+---
 
-#### User Peminjam (Tanpa Login)
-- ✅ Lihat daftar organisasi
-- ✅ Lihat barang yang tersedia
-- ✅ Pinjam barang dengan foto selfie LIVE
-- ✅ Cek status peminjaman
-- ✅ Kembalikan barang dengan foto kondisi
+## 🚀 Panduan Instalasi (Step-by-Step)
 
-## 📋 Status Peminjaman
+Ikuti langkah-langkah berikut secara berurutan untuk menjalankan aplikasi ini di komputer lokal Anda.
 
+### 1. Clone atau Download Project
+Jika menggunakan Git:
+```bash
+git clone https://github.com/username/peminjaman.git
+cd peminjaman
 ```
-MENUNGGU VERIFIKASI
-      ├── DITOLAK
-      └── DIPINJAM
-              ↓
-        MENUNGGU CEK
-              ↓
-        SELESAI
-           ├── NORMAL
-           ├── RUSAK
-           └── HILANG
-```
+Atau download ZIP dan ekstrak, lalu buka folder tersebut di terminal/CMD.
 
-## 🛠️ Tech Stack
-
-- **Backend**: Laravel 12
-- **Frontend**: React 18 + Vite
-- **Styling**: Tailwind CSS 4
-- **State Management**: Zustand
-- **API Client**: Axios
-- **Auth**: Laravel Sanctum
-
-## 📦 Instalasi
-
-### 1. Install PHP Dependencies
-
+### 2. Install Dependensi Backend (Laravel)
+Jalankan perintah berikut untuk menginstall library PHP yang dibutuhkan:
 ```bash
 composer install
-composer require laravel/sanctum
 ```
 
-### 2. Environment Setup
-
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-### 3. Database Setup
-
-```bash
-# Untuk SQLite (default)
-touch database/database.sqlite
-
-# Atau update .env untuk MySQL:
-# DB_CONNECTION=mysql
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_DATABASE=peminjaman
-# DB_USERNAME=root
-# DB_PASSWORD=
-
-# Jalankan migration
-php artisan migrate
-
-# Seed data awal
-php artisan db:seed
-```
-
-### 4. Storage Link
-
-```bash
-php artisan storage:link
-```
-
-### 5. Install Node Dependencies
-
+### 3. Install Dependensi Frontend (React)
+Jalankan perintah berikut untuk menginstall library JavaScript yang dibutuhkan:
 ```bash
 npm install
 ```
 
-### 6. Build Assets
-
+### 4. Konfigurasi Environment (`.env`)
+Salin file contoh `.env` menjadi `.env`:
 ```bash
-# Development
-npm run dev
+copy .env.example .env
+```
+*(Di Linux/Mac gunakan `cp .env.example .env`)*
 
-# Production
-npm run build
+Buka file `.env` dengan text editor (Notepad, VS Code, dll) dan sesuaikan pengaturan database:
+```ini
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=peminjaman
+DB_USERNAME=root
+DB_PASSWORD=
+```
+*Pastikan Anda membuat database kosong bernama `peminjaman` di MySQL Anda sebelum lanjut.*
+
+### 5. Generate Application Key
+```bash
+php artisan key:generate
+```
+
+### 6. Setup Database (Migrasi & Seeding)
+Langkah ini akan membuat tabel-tabel di database dan mengisi data awal (akun admin, dll).
+```bash
+php artisan migrate:fresh --seed
+```
+*Catatan: Jika muncul error "personal_access_tokens table not found", jalankan perintah ini dulu:*
+```bash
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+php artisan migrate
 ```
 
 ### 7. Jalankan Server
+Anda perlu menjalankan **dua terminal** secara bersamaan.
 
+**Terminal 1 (Backend Laravel):**
 ```bash
-# Laravel Server
 php artisan serve
+```
+Server akan berjalan di `http://127.0.0.1:8000`
 
-# Atau gunakan Laragon/XAMPP
+**Terminal 2 (Frontend React):**
+```bash
+npm run dev
 ```
 
-## 🔐 Default Credentials
+Buka browser dan akses alamat yang muncul di Terminal 2 (biasanya `http://localhost:5173` atau `http://127.0.0.1:8000` tergantung konfigurasi Vite).
 
-Setelah menjalankan `php artisan db:seed`:
+---
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin Master | admin@peminjaman.com | password123 |
-| Admin OSIS | admin.osis@peminjaman.com | password123 |
-| Admin Pramuka | admin.pramuka@peminjaman.com | password123 |
+## 🔑 Akun Login Default
 
-## 📂 Struktur Project
+Gunakan akun berikut untuk masuk ke aplikasi setelah menajalankan `db:seed`:
 
-```
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   └── Api/
-│   │   │       ├── AuthController.php
-│   │   │       ├── AdminMasterController.php
-│   │   │       ├── AdminOrgController.php
-│   │   │       └── PublicController.php
-│   │   └── Middleware/
-│   │       ├── AdminMasterMiddleware.php
-│   │       └── AdminOrgMiddleware.php
-│   └── Models/
-│       ├── Organization.php
-│       ├── User.php
-│       ├── Item.php
-│       ├── Loan.php
-│       └── AuditLog.php
-├── resources/
-│   ├── js/
-│   │   ├── components/
-│   │   ├── layouts/
-│   │   ├── lib/
-│   │   ├── pages/
-│   │   ├── stores/
-│   │   └── app.jsx
-│   └── css/
-│       └── app.css
-└── routes/
-    ├── api.php
-    └── web.php
+### 1. Admin Master (Super Admin)
+*   **Email**: `admin@peminjaman.com`
+*   **Password**: `password123`
+
+### 2. Admin OSIS (Organisasi)
+*   **Email**: `admin.osis@sekolah.sch.id`
+*   **Password**: `password123`
+
+### 3. Admin Pramuka (Organisasi)
+*   **Email**: `admin.pramuka@sekolah.sch.id`
+*   **Password**: `password123`
+
+---
+
+## ❓ Troubleshooting (Masalah Umum)
+
+**Q: Error `Table 'peminjaman.personal_access_tokens' doesn't exist` saat login?**
+A: Jalankan perintah berikut untuk memperbaiki tabel token:
+```bash
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+php artisan migrate
 ```
 
-## 🌐 API Endpoints
+**Q: Tidak bisa login dengan password yang benar?**
+A: Pastikan Anda sudah menjalankan seeding dengan benar. Coba reset database:
+```bash
+php artisan migrate:fresh --seed
+```
 
-### Public (Tanpa Auth)
-- `GET /api/public/organizations` - List organisasi
-- `GET /api/public/organizations/{slug}/items` - List barang
-- `POST /api/public/organizations/{slug}/loans` - Submit peminjaman
-- `POST /api/public/loans/check-status` - Cek status
-- `POST /api/public/loans/return` - Submit pengembalian
+**Q: Halaman kosong atau putih?**
+A: Pastikan `npm run dev` sedang berjalan. Cek console browser (F12) untuk melihat error JavaScript.
 
-### Auth
-- `POST /api/auth/login` - Login
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/me` - Get current user
+**Q: Error `Vite manifest not found`?**
+A: Jika Anda menjalankan di mode produksi, jalankan `npm run build`. Untuk development, pastikan `npm run dev` aktif.
 
-### Admin Master (Requires Auth + Role)
-- `GET /api/admin-master/dashboard` - Dashboard
-- CRUD `/api/admin-master/organizations`
-- CRUD `/api/admin-master/admins`
-- `GET /api/admin-master/audit-logs`
+---
 
-### Admin Org (Requires Auth + Role)
-- `GET /api/admin-org/dashboard` - Dashboard
-- CRUD `/api/admin-org/items`
-- `GET /api/admin-org/loans/pending` - Pending loans
-- `POST /api/admin-org/loans/{id}/approve` - Approve
-- `POST /api/admin-org/loans/{id}/reject` - Reject
-- `GET /api/admin-org/returns/pending` - Pending returns
-- `POST /api/admin-org/returns/{id}/complete` - Complete return
-- `GET /api/admin-org/reports/inventory` - Inventory report
-- `GET /api/admin-org/reports/loans` - Loan report
+## 💻 Tech Stack
 
-## 📱 Screenshots
-
-Aplikasi ini menggunakan design:
-- Dark mode dengan glassmorphism effects
-- Gradient backgrounds dan glow effects
-- Responsive untuk mobile dan desktop
-- Modern animations dan transitions
-
-## ⚠️ Aturan Sistem
-
-1. Barang dengan `is_loanable = false` tidak bisa dipinjam
-2. User wajib upload foto selfie LIVE (tidak bisa dari galeri)
-3. Stok 0 = peminjaman ditutup otomatis
-4. Semua aksi admin tercatat di audit log
-5. Data peminjam bersifat read-only
-
-## 📝 License
-
-MIT License
+*   **Framework**: Laravel 12
+*   **Frontend**: React.js
+*   **Styling**: Tailwind CSS
+*   **Icons**: Lucide React
+*   **Database**: MySQL
+*   **Auth**: Laravel Sanctum
