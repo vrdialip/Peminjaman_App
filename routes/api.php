@@ -78,6 +78,7 @@ Route::prefix('admin-org')->middleware(['auth:sanctum', 'admin.org'])->group(fun
     Route::get('/dashboard', [AdminOrgController::class, 'dashboard']);
     
     // Items Management
+    Route::get('/items/export', [AdminOrgController::class, 'exportItems']);
     Route::get('/items', [AdminOrgController::class, 'listItems']);
     Route::post('/items', [AdminOrgController::class, 'createItem']);
     Route::get('/items/{item}', [AdminOrgController::class, 'showItem']);

@@ -89,6 +89,7 @@ export const adminOrgApi = {
     dashboard: () => api.get('/admin-org/dashboard'),
 
     // Items
+    exportItems: () => api.get('/admin-org/items/export', { responseType: 'blob' }),
     getItems: (params = {}) => api.get('/admin-org/items', { params }),
     createItem: (data) => {
         const formData = new FormData();

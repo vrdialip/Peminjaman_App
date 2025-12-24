@@ -254,13 +254,69 @@ class AdminOrgController extends Controller
         
         $categories = Item::byOrganization($user->organization_id)
             ->whereNotNull('category')
+            ->where('category', '!=', '')
             ->distinct()
+            ->orderBy('category')
             ->pluck('category');
 
         return response()->json([
             'success' => true,
             'data' => $categories,
         ]);
+    }
+
+    /**
+     * Export items to CSV (Excel compatible)
+     */
+    public function exportItems(Request $request)
+    {
+        $user = $request->user();
+        $items = Item::byOrganization($user->organization_id)->latest()->get();
+
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=items_export_" . date('Y-m-d_H-i-s') . ".csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use ($items) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for Excel UTF-8 compatibility
+            fputs($file, "\xEF\xBB\xBF");
+
+            // Header Row
+            fputcsv($file, ['Kode Barang', 'Nama Barang', 'Kategori', 'Stok Total', 'Stok Tersedia', 'Kondisi', 'Status Pinjam', 'Keterangan']);
+
+            foreach ($items as $item) {
+                fputcsv($file, [
+                    $item->code,
+                    $item->name,
+                    $item->category,
+                    $item->stock,
+                    $item->available_stock,
+                    $this->translateCondition($item->condition),
+                    $item->is_loanable ? 'Bisa Dipinjam' : 'Tidak Bisa Dipinjam',
+                    $item->description
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function translateCondition($condition)
+    {
+        return match ($condition) {
+            'good' => 'Baik',
+            'fair' => 'Cukup',
+            'poor' => 'Kurang (Rusak)',
+            default => $condition,
+        };
     }
 
     // ==================== LOAN VERIFICATION ====================

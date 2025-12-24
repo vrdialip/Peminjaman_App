@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Package, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Search, Package, Edit, Trash2, Eye, EyeOff, FileSpreadsheet } from 'lucide-react';
 import { AdminOrgLayout } from '@/layouts/AdminOrgLayout';
 import { adminOrgApi } from '@/lib/api';
 import { Card, Button, Input, Select, Spinner, Badge, EmptyState, Textarea } from '@/components/ui';
@@ -33,14 +33,24 @@ export function ItemsPage() {
 
     const fetchData = async () => {
         try {
-            const [itemsRes, catsRes] = await Promise.all([
-                adminOrgApi.getItems({ search, category: categoryFilter }),
-                adminOrgApi.getCategories(),
-            ]);
-            setItems(itemsRes.data.data.data || itemsRes.data.data);
-            setCategories(catsRes.data.data || []);
+            // Fetch categories first to ensure dropdown populates even if items fail
+            const catsRes = await adminOrgApi.getCategories();
+            // Handle different response structures gracefully
+            const categoriesData = Array.isArray(catsRes.data) ? catsRes.data :
+                (Array.isArray(catsRes.data?.data) ? catsRes.data.data : []);
+            setCategories(categoriesData);
+
+            // Fetch items
+            const params = { search };
+            if (categoryFilter) {
+                params.category = categoryFilter;
+            }
+            const itemsRes = await adminOrgApi.getItems(params);
+            setItems(itemsRes.data.data.data || itemsRes.data.data || []);
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error fetching data:', error);
+            // Don't clear items on error to prevent flashing empty state
+            toast.error('Gagal mengambil data');
         } finally {
             setLoading(false);
         }
@@ -116,6 +126,21 @@ export function ItemsPage() {
         }
     };
 
+    const handleExport = async () => {
+        try {
+            const response = await adminOrgApi.exportItems();
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `items_export_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            toast.error('Gagal mengexport data');
+        }
+    };
+
     return (
         <AdminOrgLayout>
             <div className="space-y-6">
@@ -125,10 +150,16 @@ export function ItemsPage() {
                         <h1 className="text-2xl font-bold text-white">Kelola Barang</h1>
                         <p className="text-white/60">Kelola inventaris barang organisasi</p>
                     </div>
-                    <Button variant="primary" onClick={() => { resetForm(); setEditingItem(null); setShowModal(true); }}>
-                        <Plus className="w-4 h-4" />
-                        Tambah Barang
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="secondary" onClick={handleExport}>
+                            <FileSpreadsheet className="w-4 h-4" />
+                            Export Excel
+                        </Button>
+                        <Button variant="primary" onClick={() => { resetForm(); setEditingItem(null); setShowModal(true); }}>
+                            <Plus className="w-4 h-4" />
+                            Tambah Barang
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Filters */}
