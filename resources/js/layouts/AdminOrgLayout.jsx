@@ -12,6 +12,7 @@ import {
     Building2,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import NotificationBell from '@/components/NotificationBell';
 import clsx from 'clsx';
 
 const menuItems = [
@@ -132,6 +133,7 @@ export function AdminOrgLayout({ children }) {
                     <div className="flex-1" />
 
                     <div className="flex items-center gap-4">
+                        <NotificationBell />
                         <span className="text-white/50 text-sm hidden sm:block">
                             <span className="text-emerald-400">{user?.organization?.name}</span>
                         </span>

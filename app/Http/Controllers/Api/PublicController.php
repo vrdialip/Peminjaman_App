@@ -8,6 +8,9 @@ use App\Models\Item;
 use App\Models\Loan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
+use App\Models\User;
+use App\Notifications\NewLoanRequest;
 
 class PublicController extends Controller
 {
@@ -211,6 +214,20 @@ class PublicController extends Controller
             'expected_return_date' => $request->expected_return_date,
             'status' => Loan::STATUS_PENDING,
         ]);
+
+        // Send notification to Organization Admins
+        try {
+            $admins = User::where('organization_id', $organization->id)
+                ->where('role', 'admin_org')
+                ->get();
+            
+            if ($admins->count() > 0) {
+                Notification::send($admins, new NewLoanRequest($loan));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            \Log::error('Failed to send notification: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

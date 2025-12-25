@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Camera as CameraIcon, X, RotateCcw, Check } from 'lucide-react';
 import { Button } from './ui';
 
@@ -10,27 +10,113 @@ export function CameraCapture({ onCapture, onClose }) {
     const [capturedImage, setCapturedImage] = useState(null);
     const [error, setError] = useState(null);
     const [facingMode, setFacingMode] = useState('user');
+    const [devices, setDevices] = useState([]);
+    const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
 
-    const startCamera = useCallback(async () => {
+    const startCamera = useCallback(async (targetDeviceId = null) => {
         try {
             setError(null);
-            const mediaStream = await navigator.mediaDevices.getUserMedia({
+
+            // 1. Check if browser supports mediaDevices
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Browser tidak mendukung akses kamera audio/video.');
+            }
+
+            // 2. Check for Secure Context (HTTPS or localhost)
+            // Note: window.isSecureContext is widely supported
+            if (!window.isSecureContext) {
+                const hostname = window.location.hostname;
+                // Some browsers allow camera on localhost/127.0.0.1 even if not "Secure", but typically HTTP on IP (192.168.x.x) is blocked.
+                if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+                    throw new Error('Akses kamera memerlukan koneksi aman (HTTPS). Jika sedang development, gunakan localhost.');
+                }
+            }
+
+            // Build constraints
+            let constraints = {
                 video: {
-                    facingMode: facingMode,
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
                 },
                 audio: false,
-            });
+            };
+
+            // Apply device ID if specific target provided, otherwise use facing mode
+            if (targetDeviceId && typeof targetDeviceId === 'string') {
+                constraints.video.deviceId = { exact: targetDeviceId };
+            } else if (!targetDeviceId) {
+                // Initial default: try facing mode if no specific device selected
+                constraints.video.facingMode = facingMode;
+            }
+
+            let mediaStream;
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (initialErr) {
+                console.warn('Initial constraints failed, retrying with looser constraints...', initialErr);
+
+                // Fallback 1: Try without facingMode if that was the issue (common on laptops)
+                if (constraints.video.facingMode) {
+                    delete constraints.video.facingMode;
+                    try {
+                        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    } catch (e2) {
+                        // proceed to next fallback
+                    }
+                }
+
+                if (!mediaStream) {
+                    // Fallback 2: relax constraints completely (any video device)
+                    try {
+                        mediaStream = await navigator.mediaDevices.getUserMedia({
+                            video: true,
+                            audio: false
+                        });
+                    } catch (fallbackErr) {
+                        // Analyze the specific error from the fallback
+                        throw fallbackErr;
+                    }
+                }
+            }
 
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
                 setStream(mediaStream);
                 setIsCapturing(true);
+
+                // Enumerate devices once we have permission
+                // This is important because labels are often hidden until permission is granted
+                try {
+                    const allDevices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = allDevices.filter(device => device.kind === 'videoinput');
+                    setDevices(videoDevices);
+
+                    // Sync current index with active track
+                    const track = mediaStream.getVideoTracks()[0];
+                    const currentId = track.getSettings().deviceId;
+                    const idx = videoDevices.findIndex(d => d.deviceId === currentId);
+                    if (idx !== -1) setCurrentDeviceIndex(idx);
+                } catch (e) {
+                    console.warn('Failed to enumerate devices', e);
+                }
             }
         } catch (err) {
             console.error('Camera error:', err);
-            setError('Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.');
+            let msg = 'Tidak dapat mengakses kamera.';
+
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                msg = 'Izin kamera ditolak. Harap izinkan akses kamera di browser Anda.';
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                msg = 'Kamera tidak ditemukan pada perangkat ini.';
+            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                msg = 'Kamera sedang digunakan oleh aplikasi lain atau mengalami masalah hardware.';
+            } else if (err.message && err.message.includes('HTTPS')) {
+                msg = err.message;
+            } else if (err.message && err.message.length < 100) {
+                msg = msg + ' ' + err.message;
+            }
+
+            setError(msg);
         }
     }, [facingMode]);
 
@@ -71,9 +157,22 @@ export function CameraCapture({ onCapture, onClose }) {
 
     const switchCamera = useCallback(() => {
         stopCamera();
-        setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
-        setTimeout(startCamera, 100);
-    }, [stopCamera, startCamera]);
+
+        if (devices.length > 1) {
+            // Cycle through available video devices
+            const nextIndex = (currentDeviceIndex + 1) % devices.length;
+            setCurrentDeviceIndex(nextIndex);
+            const nextDevice = devices[nextIndex];
+            // Use timeout to allow stream cleanup
+            setTimeout(() => startCamera(nextDevice.deviceId), 100);
+        } else {
+            // Fallback for single recognized device (e.g. mobile toggle front/back)
+            setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+            // Timeout managed by dependency change or explicit call? 
+            // Since we rely on facingMode state for the startCamera call in this branch:
+            setTimeout(() => startCamera(), 100);
+        }
+    }, [stopCamera, startCamera, devices, currentDeviceIndex]);
 
     React.useEffect(() => {
         startCamera();
@@ -105,7 +204,7 @@ export function CameraCapture({ onCapture, onClose }) {
                         <Button
                             variant="primary"
                             className="mt-4"
-                            onClick={startCamera}
+                            onClick={() => startCamera()}
                         >
                             Coba Lagi
                         </Button>

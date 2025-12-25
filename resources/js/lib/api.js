@@ -46,6 +46,13 @@ export const authApi = {
     changePassword: (data) => api.put('/auth/password', data),
 };
 
+export const notificationApi = {
+    getAll: () => api.get('/auth/notifications'),
+    getUnreadCount: () => api.get('/auth/notifications/unread-count'),
+    markAsRead: (id) => api.put(`/auth/notifications/${id}/read`),
+    markAllRead: () => api.put('/auth/notifications/read-all'),
+};
+
 // ==================== PUBLIC API ====================
 export const publicApi = {
     getOrganizations: () => api.get('/public/organizations'),

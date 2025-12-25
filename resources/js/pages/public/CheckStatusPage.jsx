@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Package, Camera, Send, CheckCircle, XCircle, Clock, AlertTriangle, RotateCcw } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { publicApi } from '@/lib/api';
 import { Card, Button, Input, Badge, Spinner } from '@/components/ui';
@@ -8,29 +9,66 @@ import toast from 'react-hot-toast';
 
 export function CheckStatusPage() {
     const [loanCode, setLoanCode] = useState('');
-    const [loan, setLoan] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [searchCode, setSearchCode] = useState('');
     const [showReturnForm, setShowReturnForm] = useState(false);
     const [showCamera, setShowCamera] = useState(false);
     const [returnPhoto, setReturnPhoto] = useState(null);
     const [returnNotes, setReturnNotes] = useState('');
     const [submittingReturn, setSubmittingReturn] = useState(false);
+    const lastStatusRef = useRef(null);
 
-    const handleSearch = async (e) => {
+    // Poll status using React Query
+    const { data: loan, isLoading: loading, error } = useQuery({
+        queryKey: ['loanStatus', searchCode],
+        queryFn: async () => {
+            const { data } = await publicApi.checkLoanStatus(searchCode);
+            return data.data;
+        },
+        enabled: !!searchCode,
+        refetchInterval: 10000, // Poll every 10s
+        retry: false,
+    });
+
+    const handleSearch = (e) => {
         e.preventDefault();
         if (!loanCode.trim()) return;
-
-        setLoading(true);
-        setLoan(null);
-        try {
-            const { data } = await publicApi.checkLoanStatus(loanCode);
-            setLoan(data.data);
-        } catch (error) {
-            toast.error('Kode peminjaman tidak ditemukan');
-        } finally {
-            setLoading(false);
-        }
+        setSearchCode(loanCode.toUpperCase());
     };
+
+    // Notification Effect
+    useEffect(() => {
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (loan) {
+            // First load or update
+            if (lastStatusRef.current && lastStatusRef.current !== loan.status) {
+                // Status Updated
+                const opts = { icon: '/favicon.ico' };
+                if (loan.status === 'borrowed') {
+                    toast.success('Peminjaman DISETUJUI! Silakan ambil barang.');
+                    new Notification("Peminjaman Disetujui ✅", { body: `Permintaan ${loan.item} telah disetujui.`, ...opts });
+                } else if (loan.status === 'rejected') {
+                    toast.error('Peminjaman DITOLAK.');
+                    new Notification("Peminjaman Ditolak ❌", { body: `Permintaan ${loan.item} ditolak.`, ...opts });
+                } else if (loan.status === 'completed') {
+                    toast.success('Pengembalian selesai!');
+                    new Notification("Pengembalian Selesai", { body: `Barang ${loan.item} telah diterima kembali.`, ...opts });
+                }
+            }
+            lastStatusRef.current = loan.status;
+        }
+    }, [loan]);
+
+    // Handle 404/Error manually for UI
+    useEffect(() => {
+        if (error) {
+            toast.error('Kode peminjaman tidak ditemukan');
+        }
+    }, [error]);
 
     const handleSubmitReturn = async () => {
         if (!returnPhoto) {
@@ -102,6 +140,7 @@ export function CheckStatusPage() {
                             <input
                                 type="text"
                                 value={loanCode}
+
                                 onChange={(e) => setLoanCode(e.target.value.toUpperCase())}
                                 placeholder="Masukkan kode peminjaman..."
                                 className="input pl-12 font-mono"
