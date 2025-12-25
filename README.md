@@ -57,7 +57,7 @@ Fitur untuk pembina atau admin utama sekolah:
 Ikuti langkah ini untuk menjalankan project di komputer lokal (Windows/Mac/Linux).
 
 ### Prersyaratan
-- PHP >= 8.2
+- PHP 8.3+
 - Composer
 - Node.js & NPM
 - MySQL Database
