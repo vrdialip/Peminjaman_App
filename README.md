@@ -1,141 +1,161 @@
-# 📦 Sistem Peminjaman Barang
+# 📦 Sistem Peminjaman Barang Organisasi (Digital Loan System)
 
-Aplikasi manajemen peminjaman barang berbasis web yang dibangun menggunakan **Laravel 12** (Backend) dan **React + Tailwind CSS** (Frontend).
+Aplikasi berbasis web modern untuk mengelola peminjaman inventaris organisasi (OSIS, Pramuka, Ekstrakurikuler, dll). Aplikasi ini mendigitalkan proses peminjaman konvensional menjadi sistem yang transparan, mudah dilacak, dan efisien dengan verifikasi berbasis foto.
 
-## 🛠️ Persyaratan Sistem (Requirements)
+Dibangun dengan teknologi terbaru: **Laravel 12 (Backend)** dan **React + Tailwind CSS (Frontend)**.
 
-Sebelum memulai, pastikan komputer Anda sudah terinstall:
+---
 
-*   **PHP**: Versi 8.2 atau lebih baru.
-*   **Composer**: Untuk manajemen dependensi PHP.
-*   **Node.js & NPM**: Untuk manajemen dependensi Frontend.
-*   **MySQL**: Database server (Bisa menggunakan XAMPP, Laragon, atau Docker).
-*   **Git**: (Opsional) Untuk clone repository.
+## ✨ Fitur Utama
+
+Aplikasi ini dibagi menjadi 3 role utama dengan fitur spesifik:
+
+### 1. 🌐 User Public (Peminjam)
+Fitur untuk siswa/guru yang ingin meminjam barang:
+- **Katalog Online**: Melihat daftar barang yang tersedia di setiap organisasi beserta info stok real-time.
+- **Ajukan Peminjaman**: Form peminjaman mudah dengan input data diri.
+- **📸 Verifikasi Selfie**: Wajib mengambil foto selfie secara langsung (live camera) saat mengajukan peminjaman sebagai bukti valid. Mendukung kamera Laptop & HP.
+- **Cek Status**: Melacak status pengajuan (Pending/Disetujui/Ditolak) menggunakan **Kode Peminjaman** unik.
+- **Pengembalian Barang**: Mengajukan pengembalian barang dengan menyertakan **Foto Bukti Kondisi Barang**.
+- **🔔 Notifikasi Real-time**: Mendapatkan notifikasi browser saat admin menyetujui atau menolak peminjaman.
+
+### 2. 🏢 Admin Organisasi
+Fitur untuk pengurus organisasi yang mengelola barang:
+- **Dashboard Organisasi**: Ringkasan jumlah barang, peminjaman aktif, dan pengembalian pending.
+- **Manajemen Barang**: Tambah, edit, hapus inventaris barang (Upload foto, set stok, kategori).
+- **Verifikasi Peminjaman**: 
+  - Melihat foto selfie peminjam.
+  - Menyetujui atau Menolak pengajuan (dengan alasan).
+- **Verifikasi Pengembalian**:
+  - Mengecek foto kondisi barang saat dikembalikan.
+  - Menyelesaikan status peminjaman.
+- **🔔 Lonceng Notifikasi**: Notifikasi *real-time* saat ada pengajuan baru masuk tanpa perlu refresh halaman.
+- **Laporan**: Cetak laporan inventaris dan riwayat peminjaman.
+
+### 3. 👑 Admin Master (Super Admin)
+Fitur untuk pembina atau admin utama sekolah:
+- **Multi-Organisasi**: Membuat dan mengelola banyak organisasi (OSIS, MPK, Rohis, dll).
+- **Manajemen Admin**: Membuat akun untuk Admin Organisasi.
+- **Monitoring Global**: Melihat semua aktivitas peminjaman di seluruh organisasi.
+- **Audit Logs**: Riwayat aktivitas sistem untuk keamanan.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend**: Laravel 12, MySQL, Sanctum (Auth).
+- **Frontend**: React 18, React Router v7, Zustand (State Management), React Query (Data Fetching).
+- **Styling**: Tailwind CSS v4, Lucide React (Icons).
+- **Features**: 
+  - 📷 **Camera.jsx**: Komponen kamera custom dengan pendeteksi perangkat & fallback cerdas.
+  - 🔔 **Notification System**: Polling otomatis & Browser Notification API.
 
 ---
 
 ## 🚀 Panduan Instalasi (Step-by-Step)
 
-Ikuti langkah-langkah berikut secara berurutan untuk menjalankan aplikasi ini di komputer lokal Anda.
+Ikuti langkah ini untuk menjalankan project di komputer lokal (Windows/Mac/Linux).
 
-### 1. Clone atau Download Project
-Jika menggunakan Git:
+### Prersyaratan
+- PHP >= 8.2
+- Composer
+- Node.js & NPM
+- MySQL Database
+
+### 1. Clone Project
 ```bash
 git clone https://github.com/username/peminjaman.git
-cd peminjaman
+cd Peminjaman
 ```
-Atau download ZIP dan ekstrak, lalu buka folder tersebut di terminal/CMD.
 
-### 2. Install Dependensi Backend (Laravel)
-Jalankan perintah berikut untuk menginstall library PHP yang dibutuhkan:
+### 2. Setup Backend (Laravel)
+Install dependensi PHP:
 ```bash
 composer install
 ```
 
-### 3. Install Dependensi Frontend (React)
-Jalankan perintah berikut untuk menginstall library JavaScript yang dibutuhkan:
+Salin konfigurasi environment:
 ```bash
-npm install
+cp .env.example .env
+# Windows: copy .env.example .env
 ```
 
-### 4. Konfigurasi Environment (`.env`)
-Salin file contoh `.env` menjadi `.env`:
-```bash
-copy .env.example .env
-```
-*(Di Linux/Mac gunakan `cp .env.example .env`)*
-
-Buka file `.env` dengan text editor (Notepad, VS Code, dll) dan sesuaikan pengaturan database:
+**Buka file `.env`** dan atur koneksi database:
 ```ini
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=peminjaman
+DB_DATABASE=peminjaman_db  # Pastikan buat database ini di MySQL
 DB_USERNAME=root
 DB_PASSWORD=
 ```
-*Pastikan Anda membuat database kosong bernama `peminjaman` di MySQL Anda sebelum lanjut.*
 
-### 5. Generate Application Key
+Generate key aplikasi & link storage (untuk gambar):
 ```bash
 php artisan key:generate
+php artisan storage:link
 ```
 
-### 6. Setup Database (Migrasi & Seeding)
-Langkah ini akan membuat tabel-tabel di database dan mengisi data awal (akun admin, dll).
+Jalankan migrasi database & seeder data awal:
 ```bash
 php artisan migrate:fresh --seed
 ```
-*Catatan: Jika muncul error "personal_access_tokens table not found", jalankan perintah ini dulu:*
+
+### 3. Setup Frontend (React)
+Install dependensi Node.js:
 ```bash
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
-php artisan migrate
+npm install
 ```
 
-### 7. Jalankan Server
+### 4. Menjalankan Aplikasi
 Anda perlu menjalankan **dua terminal** secara bersamaan.
 
-**Terminal 1 (Backend Laravel):**
+**Terminal 1 (Laravel Server):**
 ```bash
 php artisan serve
 ```
-Server akan berjalan di `http://127.0.0.1:8000`
+*Server berjalan di: http://127.0.0.1:8000*
 
-**Terminal 2 (Frontend React):**
+**Terminal 2 (Vite Dev Server):**
 ```bash
 npm run dev
 ```
 
-Buka browser dan akses alamat yang muncul di Terminal 2 (biasanya `http://localhost:5173` atau `http://127.0.0.1:8000` tergantung konfigurasi Vite).
+Buka browser dan akses **`http://127.0.0.1:8000`**.
 
 ---
 
 ## 🔑 Akun Login Default
 
-Gunakan akun berikut untuk masuk ke aplikasi setelah menajalankan `db:seed`:
+Gunakan akun ini untuk masuk ke sistem setelah menjalankan `db:seed`.
 
-### 1. Admin Master (Super Admin)
-*   **Email**: `admin@peminjaman.com`
-*   **Password**: `password123`
+### 1. Super Admin (Admin Master)
+*Akses penuh ke semua organisasi.*
+- **Email**: `admin@peminjaman.com`
+- **Password**: `password123`
 
-### 2. Admin OSIS (Organisasi)
-*   **Email**: `admin.osis@sekolah.sch.id`
-*   **Password**: `password123`
+### 2. Admin OSIS
+*Hanya mengelola barang & peminjaman OSIS.*
+- **Email**: `admin.osis@sekolah.sch.id`
+- **Password**: `password123`
 
-### 3. Admin Pramuka (Organisasi)
-*   **Email**: `admin.pramuka@sekolah.sch.id`
-*   **Password**: `password123`
-
----
-
-## ❓ Troubleshooting (Masalah Umum)
-
-**Q: Error `Table 'peminjaman.personal_access_tokens' doesn't exist` saat login?**
-A: Jalankan perintah berikut untuk memperbaiki tabel token:
-```bash
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
-php artisan migrate
-```
-
-**Q: Tidak bisa login dengan password yang benar?**
-A: Pastikan Anda sudah menjalankan seeding dengan benar. Coba reset database:
-```bash
-php artisan migrate:fresh --seed
-```
-
-**Q: Halaman kosong atau putih?**
-A: Pastikan `npm run dev` sedang berjalan. Cek console browser (F12) untuk melihat error JavaScript.
-
-**Q: Error `Vite manifest not found`?**
-A: Jika Anda menjalankan di mode produksi, jalankan `npm run build`. Untuk development, pastikan `npm run dev` aktif.
+### 3. Admin Pramuka
+*Hanya mengelola barang & peminjaman Pramuka.*
+- **Email**: `admin.pramuka@sekolah.sch.id`
+- **Password**: `password123`
 
 ---
 
-## 💻 Tech Stack
+## ❓ Pemecahan Masalah (Troubleshooting)
 
-*   **Framework**: Laravel 12
-*   **Frontend**: React.js
-*   **Styling**: Tailwind CSS
-*   **Icons**: Lucide React
-*   **Database**: MySQL
-*   **Auth**: Laravel Sanctum
+**Q: Kamera tidak muncul (Blank Screen / Error Permission)?**
+A: 
+1. Pastikan browser mengizinkan akses kamera.
+2. Jika mengetes lewat HP/Jaringan lokal, **WAJIB** menggunakan HTTPS atau akses via `localhost`. Browser memblokir kamera di `http://192.168.x.x` (Unsecure Context).
+3. Coba refresh halaman.
+
+**Q: Notifikasi tidak muncul?**
+A: Pastikan Anda menekan "Allow" saat browser meminta izin notifikasi di pojok kiri atas.
+
+**Q: Gambar/Foto tidak muncul?**
+A: Jalankan `php artisan storage:link` untuk menghubungkan folder publik ke storage.
