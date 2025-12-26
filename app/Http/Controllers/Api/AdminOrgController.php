@@ -61,14 +61,14 @@ class AdminOrgController extends Controller
         $user = $request->user();
         $query = Item::byOrganization($user->organization_id);
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
                   ->orWhere('code', 'like', '%' . $request->search . '%');
             });
         }
 
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
@@ -76,7 +76,7 @@ class AdminOrgController extends Controller
             $query->where('is_loanable', $request->boolean('is_loanable'));
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -524,11 +524,11 @@ class AdminOrgController extends Controller
         $user = $request->user();
         $query = Loan::with('item')->byOrganization($user->organization_id);
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('borrower_name', 'like', '%' . $request->search . '%')
                   ->orWhere('loan_code', 'like', '%' . $request->search . '%');

@@ -118,12 +118,12 @@ class Loan extends Model
     // Accessors
     public function getBorrowerPhotoUrlAttribute()
     {
-        return $this->borrower_photo ? asset('storage/' . $this->borrower_photo) : null;
+        return $this->borrower_photo ? \Illuminate\Support\Facades\Storage::url($this->borrower_photo) : null;
     }
 
     public function getReturnPhotoUrlAttribute()
     {
-        return $this->return_photo ? asset('storage/' . $this->return_photo) : null;
+        return $this->return_photo ? \Illuminate\Support\Facades\Storage::url($this->return_photo) : null;
     }
 
     public function getStatusLabelAttribute()

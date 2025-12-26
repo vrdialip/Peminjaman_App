@@ -144,9 +144,14 @@ export function LoanDetailPage() {
                                 <div>
                                     <p className="text-sm text-white/50 mb-2">Foto Peminjam</p>
                                     <img
-                                        src={loan.borrower_photo_url}
+                                        src={loan.borrower_photo_url || loan.borrower_photo}
+                                        onError={(e) => {
+                                            console.warn("Failed to load borrower photo", e.target.src);
+                                            e.target.style.display = 'none';
+                                            e.target.insertAdjacentHTML('afterend', '<p class="text-red-400 text-xs">Gagal memuat foto</p>');
+                                        }}
                                         alt="Borrower"
-                                        className="w-full max-w-xs rounded-xl"
+                                        className="w-full max-w-xs rounded-xl border border-white/10"
                                     />
                                 </div>
                             )}
@@ -235,8 +240,8 @@ export function LoanDetailPage() {
                                     type="button"
                                     onClick={() => setReturnCondition(opt.value)}
                                     className={`p-3 rounded-xl border-2 transition-all ${returnCondition === opt.value
-                                            ? `border-${opt.color === 'success' ? 'emerald' : opt.color === 'warning' ? 'yellow' : 'red'}-500 bg-${opt.color === 'success' ? 'emerald' : opt.color === 'warning' ? 'yellow' : 'red'}-500/10`
-                                            : 'border-white/10 hover:border-white/20'
+                                        ? `border-${opt.color === 'success' ? 'emerald' : opt.color === 'warning' ? 'yellow' : 'red'}-500 bg-${opt.color === 'success' ? 'emerald' : opt.color === 'warning' ? 'yellow' : 'red'}-500/10`
+                                        : 'border-white/10 hover:border-white/20'
                                         }`}
                                 >
                                     <Badge variant={opt.color}>{opt.label}</Badge>

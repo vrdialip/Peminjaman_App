@@ -136,12 +136,12 @@ Gunakan akun ini untuk masuk ke sistem setelah menjalankan `db:seed`.
 
 ### 2. Admin OSIS
 *Hanya mengelola barang & peminjaman OSIS.*
-- **Email**: `admin.osis@sekolah.sch.id`
+- **Email**: `admin.osis@peminjaman.com`
 - **Password**: `password123`
 
 ### 3. Admin Pramuka
 *Hanya mengelola barang & peminjaman Pramuka.*
-- **Email**: `admin.pramuka@sekolah.sch.id`
+- **Email**: `admin.pramuka@peminjaman.com`
 - **Password**: `password123`
 
 ---

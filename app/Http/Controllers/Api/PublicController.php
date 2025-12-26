@@ -57,11 +57,11 @@ class PublicController extends Controller
 
         $query = Item::byOrganization($organization->id)->active();
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
@@ -86,11 +86,11 @@ class PublicController extends Controller
 
         $query = Item::byOrganization($organization->id)->loanable();
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 

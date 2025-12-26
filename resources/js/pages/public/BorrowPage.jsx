@@ -264,7 +264,7 @@ export function BorrowPage() {
                                 {/* Photo */}
                                 <div>
                                     <label className="block text-sm font-medium text-white/70 mb-2">
-                                        Foto Selfie <span className="text-red-400">*</span>
+                                        Foto Selfie dengan Barang <span className="text-red-400">*</span>
                                     </label>
 
                                     {form.borrower_photo ? (
@@ -282,14 +282,14 @@ export function BorrowPage() {
                                                 <Camera className="w-8 h-8 text-indigo-400" />
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-white font-medium">Ambil Foto Selfie</p>
+                                                <p className="text-white font-medium">Ambil Foto Selfie dengan Barang</p>
                                                 <p className="text-sm text-white/50">Klik untuk membuka kamera</p>
                                             </div>
                                         </button>
                                     )}
 
                                     <p className="mt-2 text-xs text-white/40">
-                                        Foto selfie diperlukan untuk verifikasi peminjaman. Foto harus diambil langsung, tidak bisa dari galeri.
+                                        Foto selfie dengan barang diperlukan untuk verifikasi peminjaman. Foto harus diambil langsung.
                                     </p>
                                 </div>
 
